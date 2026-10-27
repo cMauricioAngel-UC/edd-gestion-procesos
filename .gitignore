@@ -1,0 +1,7 @@
+build/
+*.exe
+gestor_parcial
+procesos.txt
+cola.txt
+memoria.txt
+*.tmp
