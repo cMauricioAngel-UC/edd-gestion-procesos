@@ -9,4 +9,4 @@ g++ -std=c++98 -Wall -Wextra -pedantic version_para_equipo/main.cpp -o avance
 ./avance
 ```
 
-`include/` contiene el PCB y los contratos de integración. Los documentos de planificación, guías y borradores del informe se guardaron en [Google Drive](https://drive.google.com/drive/folders/1dHN9C6gltpdiZE9SI_pRcXBnIdCkt8Dy).
+`include/` contiene el PCB y los contratos de integración. Los documentos de planificación, guías y borradores del informe se guardaron en [Google Drive].
