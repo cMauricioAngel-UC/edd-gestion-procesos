@@ -1,30 +1,38 @@
-#ifndef ED_LISTA_PROCESOS_H
-#define ED_LISTA_PROCESOS_H
+#ifndef LISTAPROCESOS_H
+#define LISTAPROCESOS_H
 
+// MODULO DE: Mauricio
+
+#include <string>
 #include "PCB.h"
 
-// Anthony: implementar con nodos enlazados propios, sin std::list.
-// La lista conserva los PCB; cola y pila solo conservan PID y sus metadatos.
+// Lista enlazada simple de procesos. Es la unica duena de los PCB.
 class ListaProcesos {
 public:
+    typedef void (*Visitante)(const PCB&, void*);
+
     ListaProcesos();
     ~ListaProcesos();
-    bool insertar(const PCB& proceso); // rechaza PID repetido
-    bool eliminar(int pid);
-    PCB* buscarPorPid(int pid);
-    const PCB* buscarPorPid(int pid) const;
-    PCB* buscarPorNombre(const std::string& nombre);
-    bool modificarPrioridad(int pid, int prioridad);
-    bool cambiarEstado(int pid, const std::string& estado);
-    void mostrar() const;
-    bool vacia() const;
+
+    bool insertar(const PCB& p);              // al final; false si PID repetido
+    PCB* buscarPorPid(int pid);               // NULL si no existe
+    PCB* buscarPorNombre(const std::string& nombre); // primer resultado
+    bool eliminar(int pid);                   // cabeza, interior o ultimo
+    void recorrer(Visitante v, void* ctx) const;
     void liberarTodo();
-    // Recorre de cabeza a cola; lo usa Mauricio para guardar en disco.
-    void recorrer(void (*visitar)(const PCB&, void*), void* contexto) const;
+    int  tamanio() const;
+    bool vacia() const;
+
 private:
-    struct Nodo;
+    // Nodo: un PCB completo y la direccion del siguiente nodo (NULL = fin).
+    struct Nodo {
+        PCB   dato;
+        Nodo* siguiente;
+    };
     Nodo* cabeza_;
-    ListaProcesos(const ListaProcesos&);
+    Nodo* cola_;   // ultimo nodo: inserta al final en O(1)
+    int          cantidad_;
+    ListaProcesos(const ListaProcesos&);            // sin copia
     ListaProcesos& operator=(const ListaProcesos&);
 };
 

@@ -1,0 +1,585 @@
+[
+  {
+    "key": "registrar_lista",
+    "title": "Insertar proceso en lista enlazada",
+    "ref": "Versión integrada del 3 de noviembre de 2026",
+    "note": "buscarPorPid recorre actual desde cabeza hasta encontrar el PID o NULL. El enlace al final cuesta O(1); la operación completa cuesta O(n) por la búsqueda de duplicados. Las variables cabeza y cola corresponden a cabeza_ y cola_.",
+    "width": 1200,
+    "height": 723,
+    "nodes": [
+      {
+        "id": "a",
+        "text": "Inicio con PCB",
+        "type": "start",
+        "x": 150.0,
+        "y": 28,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "b",
+        "text": "¿Datos válidos y PID único?",
+        "type": "decision",
+        "x": 150.0,
+        "y": 114,
+        "w": 400,
+        "h": 64
+      },
+      {
+        "id": "x",
+        "text": "Retornar falso",
+        "type": "end",
+        "x": 750.0,
+        "y": 114,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "c",
+        "text": "Crear nodo con PCB",
+        "type": "process",
+        "x": 150.0,
+        "y": 200,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "d",
+        "text": "nuevo.siguiente = NULL",
+        "type": "process",
+        "x": 150.0,
+        "y": 286,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "e",
+        "text": "¿cabeza es NULL?",
+        "type": "decision",
+        "x": 150.0,
+        "y": 372,
+        "w": 400,
+        "h": 64
+      },
+      {
+        "id": "y",
+        "text": "cabeza = nuevo",
+        "type": "process",
+        "x": 750.0,
+        "y": 372,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "g",
+        "text": "cola.siguiente = nuevo",
+        "type": "process",
+        "x": 150.0,
+        "y": 458,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "h",
+        "text": "cola = nuevo; cantidad++",
+        "type": "process",
+        "x": 150.0,
+        "y": 544,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "i",
+        "text": "Retornar verdadero",
+        "type": "end",
+        "x": 150.0,
+        "y": 630,
+        "w": 400,
+        "h": 58
+      }
+    ],
+    "edges": [
+      {
+        "a": "a",
+        "b": "b",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            86
+          ],
+          [
+            350.0,
+            114
+          ]
+        ]
+      },
+      {
+        "a": "b",
+        "b": "x",
+        "label": "No",
+        "points": [
+          [
+            550.0,
+            146.0
+          ],
+          [
+            650.0,
+            146.0
+          ],
+          [
+            650.0,
+            143.0
+          ],
+          [
+            750.0,
+            143.0
+          ]
+        ]
+      },
+      {
+        "a": "b",
+        "b": "c",
+        "label": "Sí",
+        "points": [
+          [
+            350.0,
+            178
+          ],
+          [
+            350.0,
+            200
+          ]
+        ]
+      },
+      {
+        "a": "c",
+        "b": "d",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            258
+          ],
+          [
+            350.0,
+            286
+          ]
+        ]
+      },
+      {
+        "a": "d",
+        "b": "e",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            344
+          ],
+          [
+            350.0,
+            372
+          ]
+        ]
+      },
+      {
+        "a": "e",
+        "b": "y",
+        "label": "Sí",
+        "points": [
+          [
+            550.0,
+            404.0
+          ],
+          [
+            650.0,
+            404.0
+          ],
+          [
+            650.0,
+            401.0
+          ],
+          [
+            750.0,
+            401.0
+          ]
+        ]
+      },
+      {
+        "a": "e",
+        "b": "g",
+        "label": "No",
+        "points": [
+          [
+            350.0,
+            436
+          ],
+          [
+            350.0,
+            458
+          ]
+        ]
+      },
+      {
+        "a": "y",
+        "b": "h",
+        "label": "",
+        "points": [
+          [
+            750.0,
+            401.0
+          ],
+          [
+            620,
+            401.0
+          ],
+          [
+            620,
+            573.0
+          ],
+          [
+            550.0,
+            573.0
+          ]
+        ]
+      },
+      {
+        "a": "g",
+        "b": "h",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            516
+          ],
+          [
+            350.0,
+            544
+          ]
+        ]
+      },
+      {
+        "a": "h",
+        "b": "i",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            602
+          ],
+          [
+            350.0,
+            630
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "key": "cambiar_estado",
+    "title": "Cambiar estado del proceso",
+    "ref": "Versión integrada del 3 de noviembre de 2026",
+    "note": "La cola admite solo Listo. El estado Ejecucion también retira el turno. liberarPorPid filtra con una pila auxiliar y restaura los nodos ajenos; el PCB se actualiza en la coordinación.",
+    "width": 1200,
+    "height": 637,
+    "nodes": [
+      {
+        "id": "a",
+        "text": "Inicio con PID y opción",
+        "type": "start",
+        "x": 150.0,
+        "y": 28,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "b",
+        "text": "¿PID existe y opción 1–4?",
+        "type": "decision",
+        "x": 150.0,
+        "y": 114,
+        "w": 400,
+        "h": 64
+      },
+      {
+        "id": "x",
+        "text": "Informar rechazo y terminar",
+        "type": "end",
+        "x": 750.0,
+        "y": 114,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "c",
+        "text": "¿Nuevo estado es Listo?",
+        "type": "decision",
+        "x": 150.0,
+        "y": 200,
+        "w": 400,
+        "h": 64
+      },
+      {
+        "id": "y",
+        "text": "Retirar PID de cola",
+        "type": "process",
+        "x": 750.0,
+        "y": 200,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "d",
+        "text": "¿Nuevo estado es Terminado?",
+        "type": "decision",
+        "x": 150.0,
+        "y": 286,
+        "w": 400,
+        "h": 64
+      },
+      {
+        "id": "z",
+        "text": "Liberar bloques del PID",
+        "type": "sub",
+        "x": 750.0,
+        "y": 286,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "w",
+        "text": "PCB.memoriaKB = 0",
+        "type": "process",
+        "x": 750.0,
+        "y": 372,
+        "w": 260,
+        "h": 58
+      },
+      {
+        "id": "e",
+        "text": "Actualizar estado del PCB",
+        "type": "process",
+        "x": 150.0,
+        "y": 458,
+        "w": 400,
+        "h": 58
+      },
+      {
+        "id": "g",
+        "text": "Confirmar actualización",
+        "type": "end",
+        "x": 150.0,
+        "y": 544,
+        "w": 400,
+        "h": 58
+      }
+    ],
+    "edges": [
+      {
+        "a": "a",
+        "b": "b",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            86
+          ],
+          [
+            350.0,
+            114
+          ]
+        ]
+      },
+      {
+        "a": "b",
+        "b": "x",
+        "label": "No",
+        "points": [
+          [
+            550.0,
+            146.0
+          ],
+          [
+            650.0,
+            146.0
+          ],
+          [
+            650.0,
+            143.0
+          ],
+          [
+            750.0,
+            143.0
+          ]
+        ]
+      },
+      {
+        "a": "b",
+        "b": "c",
+        "label": "Sí",
+        "points": [
+          [
+            350.0,
+            178
+          ],
+          [
+            350.0,
+            200
+          ]
+        ]
+      },
+      {
+        "a": "c",
+        "b": "y",
+        "label": "No",
+        "points": [
+          [
+            550.0,
+            232.0
+          ],
+          [
+            650.0,
+            232.0
+          ],
+          [
+            650.0,
+            229.0
+          ],
+          [
+            750.0,
+            229.0
+          ]
+        ]
+      },
+      {
+        "a": "y",
+        "b": "d",
+        "label": "",
+        "points": [
+          [
+            750.0,
+            229.0
+          ],
+          [
+            620,
+            229.0
+          ],
+          [
+            620,
+            318.0
+          ],
+          [
+            550.0,
+            318.0
+          ]
+        ]
+      },
+      {
+        "a": "c",
+        "b": "d",
+        "label": "Sí",
+        "points": [
+          [
+            350.0,
+            264
+          ],
+          [
+            350.0,
+            286
+          ]
+        ]
+      },
+      {
+        "a": "d",
+        "b": "z",
+        "label": "Sí",
+        "points": [
+          [
+            550.0,
+            318.0
+          ],
+          [
+            650.0,
+            318.0
+          ],
+          [
+            650.0,
+            315.0
+          ],
+          [
+            750.0,
+            315.0
+          ]
+        ]
+      },
+      {
+        "a": "z",
+        "b": "w",
+        "label": "",
+        "points": [
+          [
+            880.0,
+            344
+          ],
+          [
+            880.0,
+            372
+          ]
+        ]
+      },
+      {
+        "a": "w",
+        "b": "e",
+        "label": "",
+        "points": [
+          [
+            750.0,
+            401.0
+          ],
+          [
+            620,
+            401.0
+          ],
+          [
+            620,
+            487.0
+          ],
+          [
+            550.0,
+            487.0
+          ]
+        ]
+      },
+      {
+        "a": "d",
+        "b": "e",
+        "label": "No",
+        "points": [
+          [
+            350.0,
+            350
+          ],
+          [
+            350.0,
+            458
+          ]
+        ]
+      },
+      {
+        "a": "e",
+        "b": "g",
+        "label": "",
+        "points": [
+          [
+            350.0,
+            516
+          ],
+          [
+            350.0,
+            544
+          ]
+        ]
+      }
+    ]
+  }
+]

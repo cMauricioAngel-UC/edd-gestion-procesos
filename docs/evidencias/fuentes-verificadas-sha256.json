@@ -1,0 +1,15 @@
+{
+  "Makefile": "88813f2434eb9078c608bbb2255da6d9bc451b2ffb855b94cb8320ded0fcda0b",
+  "include/ColaPrioridad.h": "ec9bacbc375ae4a82db2b87bd8665d4fc7c43ed10a15068c9382a3428e9793d3",
+  "include/ListaProcesos.h": "31e15dc54336b2f67ab69440e63446590aa6af8ebcdf5d5cbf91f433cfb9fb15",
+  "include/PCB.h": "cb356f263d9f47f4892df5a6c5ad4a014069e5667d0fffd2bd8a7180f54347b6",
+  "include/Persistencia.h": "bdbc4963b7acde678282ca6ca2e883980e9f2433395e9752711518df46b796a5",
+  "include/PilaMemoria.h": "7d8d90c149665163a8be8877b818916c4b549df5a22badcc44ea84603093a20d",
+  "main.cpp": "2fa41b0a21828ce91e7fc9a804d96a538102b1e37620b3d941346aa0b480da83",
+  "src/ColaPrioridad.cpp": "ae519e64790d4b446f8f63953e126ade1a0f9eba8ba49591eb4c27d3fd202946",
+  "src/ListaProcesos.cpp": "657e3eb8b73fd34055f2a3ab421012df0d596f7a2c27c84a8ccac71ae7da4a9e",
+  "src/Persistencia.cpp": "3e1e91289822d16e9d534ba5eab52ce407560d8e6ec95b69d3c2bfb6bffc3181",
+  "src/PilaMemoria.cpp": "62bd1f78699a4c27caef209871a04f551b2518074c7e3d514b89744677a8c521",
+  "tests/ejecutar.py": "75c452b9cb9abd077a1ed3b6ac7235eb582e6299fba2ffe635708bf13f6504ed",
+  "tests/pruebas.cpp": "a92c91434f7608e18e5b531006a4665a58d5788cec76bc3d94d3903badda9604"
+}

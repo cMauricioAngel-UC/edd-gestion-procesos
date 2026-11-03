@@ -1,0 +1,16 @@
+make: Entering directory '<repositorio>'
+mkdir -p build
+g++ -std=c++98 -Wall -Wextra -pedantic -Werror -Iinclude main.cpp src/ListaProcesos.cpp src/ColaPrioridad.cpp src/PilaMemoria.cpp src/Persistencia.cpp -o build/gestor
+g++ -std=c++98 -Wall -Wextra -pedantic -Werror -Iinclude tests/pruebas.cpp src/ListaProcesos.cpp src/ColaPrioridad.cpp src/PilaMemoria.cpp src/Persistencia.cpp -o build/pruebas
+python3 tests/ejecutar.py
+OK: lista, cola/FIFO, capacidad, liberacion intercalada, persistencia y registro truncado.
+OK: menu integrado, rechazo NaN, ejecucion, liberacion y reapertura.
+Salida de demostracion:
+Opcion: PID: Nombre: Prioridad (1-10, 1 = mas alta): Tiempo estimado de ejecucion:   Proceso registrado.
+Opcion: PID: Nombre: Prioridad (1-10, 1 = mas alta): Tiempo estimado de ejecucion:   Proceso registrado.
+Opcion: PID: Nombre: Prioridad (1-10, 1 = mas alta): Tiempo estimado de ejecucion:   Valor invalido (numero >= 0).
+Opcion:   Ejecutando PID 102 (Navegador)...
+  Termino. Memoria liberada: 300 KB.
+Opcion:   PID 101 | Editor | prio 3 | Listo | t=3.5 | mem=0 KB
+  PID 102 | Navegador | prio 1 | Terminado | t=2 | mem=0 KB
+make: Leaving directory '<repositorio>'

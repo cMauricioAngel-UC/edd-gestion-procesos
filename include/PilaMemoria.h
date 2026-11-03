@@ -1,24 +1,40 @@
-#ifndef ED_PILA_MEMORIA_H
-#define ED_PILA_MEMORIA_H
+#ifndef PILAMEMORIA_H
+#define PILAMEMORIA_H
 
-// Kevin: pila enlazada de bloques; capacidad total 1024 KB.
+// MODULO DE: Mauricio
+
+// Pila enlazada de bloques. Capacidad total simulada: 1024 KB.
 class PilaMemoria {
 public:
+    typedef void (*Visitante)(int pid, int kb, void*);
+    static const int CAPACIDAD_KB = 1024;
+
     PilaMemoria();
     ~PilaMemoria();
-    bool push(int pid, int kb);
-    bool pop(int& pid, int& kb);
-    int liberarPorPid(int pid); // devuelve KB liberados, preserva el orden restante
-    bool contiene(int pid) const;
-    void estado() const;
-    bool vacia() const;
+
+    bool push(int pid, int kb);               // false si kb<=0 o sin espacio
+    bool pop(int& pid, int& kb);              // false si esta vacia
+    int  liberarPorPid(int pid);              // devuelve KB liberados
+    int  totalPorPid(int pid) const;
+    int  bloquesDePid(int pid) const;         // cantidad de bloques
+    void recorrerDesdeBase(Visitante v, void* ctx) const; // base -> tope
     void liberarTodo();
-    // Recorre desde la base al tope para restaurar el mismo orden al cargar.
-    void recorrerDesdeBase(void (*visitar)(int, int, void*), void* contexto) const;
+    int  usadosKB() const;
+    int  libresKB() const;
+    int  tamanio() const;
+    bool vacia() const;
+
 private:
-    struct Nodo;
+    // Nodo: bloque de memoria de un PID; siguiente = bloque inferior.
+    struct Nodo {
+        int   pid;
+        int   kb;
+        Nodo* siguiente;
+    };
     Nodo* tope_;
-    int usadosKB_;
+    int          usadosKB_;
+    int          cantidad_;
+    static void recorrerRec(const Nodo* n, Visitante v, void* ctx);
     PilaMemoria(const PilaMemoria&);
     PilaMemoria& operator=(const PilaMemoria&);
 };

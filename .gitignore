@@ -5,3 +5,10 @@ procesos.txt
 cola.txt
 memoria.txt
 *.tmp
+
+/build/
+*.tmp
+procesos.txt
+cola.txt
+memoria.txt
+__pycache__/

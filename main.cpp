@@ -1,232 +1,265 @@
 #include <iostream>
-#include <sstream>
 #include <string>
-#include "include/PCB.h"
+#include <cstdlib>
+#include "PCB.h"
+#include "ListaProcesos.h"
+#include "ColaPrioridad.h"
+#include "PilaMemoria.h"
+#include "Persistencia.h"
 
-// Compilacion actual: g++ -std=c++98 main.cpp -o gestor
-// Tras integrar los tres modulos: g++ -std=c++98 -DED_MODULOS_LISTOS main.cpp ...
-#ifdef ED_MODULOS_LISTOS
-#include "include/ListaProcesos.h"
-#include "include/ColaPrioridad.h"
-#include "include/PilaMemoria.h"
-#include "include/Persistencia.h"
-#endif
+using namespace std;
 
-static bool leerEntero(const std::string& etiqueta, int& valor) {
-    std::string linea;
-    std::cout << etiqueta;
-    if (!std::getline(std::cin, linea)) return false;
-    std::istringstream entrada(linea);
-    char sobrante;
-    if (!(entrada >> valor) || (entrada >> sobrante)) {
-        std::cout << "Ingrese un numero entero valido.\n";
-        return false;
-    }
-    return true;
-}
-
-#ifdef ED_MODULOS_LISTOS
-static bool leerDecimal(const std::string& etiqueta, float& valor) {
-    std::string linea;
-    std::cout << etiqueta;
-    if (!std::getline(std::cin, linea)) return false;
-    std::istringstream entrada(linea);
-    char sobrante;
-    if (!(entrada >> valor) || (entrada >> sobrante)) {
-        std::cout << "Ingrese un numero valido.\n";
-        return false;
-    }
-    return true;
-}
-
-static bool leerTexto(const std::string& etiqueta, std::string& valor) {
-    std::cout << etiqueta;
-    if (!std::getline(std::cin, valor)) return false;
-    if (valor.empty() || valor.find(';') != std::string::npos) {
-        std::cout << "El texto no puede estar vacio ni contener ';'.\n";
-        return false;
-    }
-    return true;
-}
-
-static void mostrarPCB(const PCB& p) {
-    std::cout << "PID: " << p.pid << " | Nombre: " << p.nombre
-              << " | Prioridad: " << p.prioridad << " | Estado: " << p.estado
-              << " | Tiempo: " << p.tiempoEjecucion
-              << " | Memoria: " << p.memoriaKB << " KB\n";
-}
-
-static void menuProcesos(ListaProcesos& lista, ColaPrioridad& cola,
-                         PilaMemoria& pila) {
-    int opcion;
-    std::cout << "\nPROCESOS\n1 Registrar  2 Eliminar  3 Buscar PID  "
-                 "4 Buscar nombre  5 Prioridad  6 Listar  7 Cambiar estado\n";
-    if (!leerEntero("Opcion: ", opcion)) return;
-    int pid;
-    PCB* p;
-    std::string texto;
-    switch (opcion) {
-    case 1: {
-        PCB nuevo;
-        if (!leerEntero("PID positivo: ", nuevo.pid) || nuevo.pid <= 0 ||
-            !leerTexto("Nombre: ", nuevo.nombre) ||
-            !leerEntero("Prioridad (1-10): ", nuevo.prioridad) ||
-            !prioridadValida(nuevo.prioridad) ||
-            !leerDecimal("Tiempo estimado de ejecucion: ",
-                         nuevo.tiempoEjecucion) ||
-            nuevo.tiempoEjecucion < 0) {
-            std::cout << "Datos invalidos.\n"; return;
-        }
-        std::cout << (lista.insertar(nuevo) ? "Registrado.\n" :
-                      "PID duplicado.\n");
-        break;
-    }
-    case 2:
-        if (!leerEntero("PID: ", pid)) return;
-        if (!lista.buscarPorPid(pid)) { std::cout << "No existe.\n"; return; }
-        cola.eliminarPid(pid);
-        pila.liberarPorPid(pid);
-        std::cout << (lista.eliminar(pid) ? "Eliminado en cascada.\n" :
-                      "Error al eliminar.\n");
-        break;
-    case 3:
-        if (!leerEntero("PID: ", pid)) return;
-        p = lista.buscarPorPid(pid);
-        if (p) mostrarPCB(*p); else std::cout << "No existe.\n";
-        break;
-    case 4:
-        if (!leerTexto("Nombre: ", texto)) return;
-        p = lista.buscarPorNombre(texto);
-        if (p) mostrarPCB(*p); else std::cout << "No existe.\n";
-        break;
-    case 5: {
-        int prioridad;
-        if (!leerEntero("PID: ", pid) ||
-            !leerEntero("Prioridad (1-10): ", prioridad) ||
-            !prioridadValida(prioridad)) { std::cout << "Datos invalidos.\n"; return; }
-        p = lista.buscarPorPid(pid);
-        if (!p) { std::cout << "No existe.\n"; return; }
-        const bool enCola = cola.contiene(pid);
-        if (!lista.modificarPrioridad(pid, prioridad)) return;
-        if (enCola) { cola.eliminarPid(pid); cola.encolar(pid, prioridad); }
-        std::cout << "Prioridad actualizada.\n";
-        break;
-    }
-    case 6: lista.mostrar(); break;
-    case 7:
-        if (!leerEntero("PID: ", pid) ||
-            !leerTexto("Estado (Listo/Ejecucion/Bloqueado/Terminado): ", texto) ||
-            !estadoValido(texto)) { std::cout << "Datos invalidos.\n"; return; }
-        p = lista.buscarPorPid(pid);
-        if (!p) { std::cout << "No existe.\n"; return; }
-        if (texto == "Terminado") {
-            cola.eliminarPid(pid);
-            pila.liberarPorPid(pid);
-            p->memoriaKB = 0;
-        }
-        if (texto == "Bloqueado") cola.eliminarPid(pid);
-        lista.cambiarEstado(pid, texto);
-        std::cout << "Estado actualizado.\n";
-        break;
-    default: std::cout << "Opcion desconocida.\n";
-    }
-}
-
-static void menuCola(ListaProcesos& lista, ColaPrioridad& cola,
-                     PilaMemoria& pila) {
-    int opcion, pid;
-    std::cout << "\nPLANIFICADOR\n1 Encolar  2 Ejecutar siguiente  3 Ver cola\n";
-    if (!leerEntero("Opcion: ", opcion)) return;
-    if (opcion == 1) {
-        if (!leerEntero("PID: ", pid)) return;
-        PCB* p = lista.buscarPorPid(pid);
-        if (!p || p->estado == "Terminado" || p->estado == "Bloqueado" ||
-            cola.contiene(pid)) { std::cout << "No se puede encolar.\n"; return; }
-        cola.encolar(pid, p->prioridad);
-        std::cout << "Encolado.\n";
-    } else if (opcion == 2) {
-        if (!cola.desencolar(pid)) { std::cout << "Cola vacia.\n"; return; }
-        PCB* p = lista.buscarPorPid(pid);
-        if (!p) { std::cout << "PID inexistente: estado inconsistente.\n"; return; }
-        lista.cambiarEstado(pid, "Ejecucion");
-        mostrarPCB(*p);
-        lista.cambiarEstado(pid, "Terminado");
-        pila.liberarPorPid(pid);
-        p->memoriaKB = 0;
-        std::cout << "Proceso terminado y memoria liberada.\n";
-    } else if (opcion == 3) cola.mostrar();
-    else std::cout << "Opcion desconocida.\n";
-}
-
-static void menuMemoria(ListaProcesos& lista, PilaMemoria& pila) {
-    int opcion, pid, kb;
-    std::cout << "\nMEMORIA\n1 Asignar  2 Liberar tope  "
-                 "3 Liberar por PID  4 Estado\n";
-    if (!leerEntero("Opcion: ", opcion)) return;
-    if (opcion == 1) {
-        if (!leerEntero("PID: ", pid) || !leerEntero("KB: ", kb) || kb <= 0)
-            { std::cout << "Datos invalidos.\n"; return; }
-        PCB* p = lista.buscarPorPid(pid);
-        if (!p || p->estado == "Terminado")
-            { std::cout << "PID inexistente o terminado.\n"; return; }
-        if (pila.push(pid, kb)) { p->memoriaKB += kb; std::cout << "Asignado.\n"; }
-        else std::cout << "Memoria insuficiente.\n";
-    } else if (opcion == 2) {
-        if (!pila.pop(pid, kb)) { std::cout << "Pila vacia.\n"; return; }
-        PCB* p = lista.buscarPorPid(pid);
-        if (p) p->memoriaKB -= kb;
-        std::cout << "Liberados " << kb << " KB del PID " << pid << ".\n";
-    } else if (opcion == 3) {
-        if (!leerEntero("PID: ", pid)) return;
-        kb = pila.liberarPorPid(pid);
-        PCB* p = lista.buscarPorPid(pid);
-        if (p) p->memoriaKB -= kb;
-        std::cout << "Liberados " << kb << " KB.\n";
-    } else if (opcion == 4) pila.estado();
-    else std::cout << "Opcion desconocida.\n";
-}
-#endif
-
-int main() {
-    std::cout << "Sistema de Gestion de Procesos - C2-1 ED\n";
-#ifdef ED_MODULOS_LISTOS
+// Las tres estructuras y sus operaciones se agrupan para pasarlas a los menus.
+struct Sistema {
     ListaProcesos lista;
     ColaPrioridad cola;
-    PilaMemoria pila;
-    if (!Persistencia::cargar(lista, cola, pila)) {
-        std::cerr << "No se pudo cargar el estado. Corrija los archivos antes "
-                     "de iniciar; no se sobrescribiran.\n";
+    PilaMemoria   pila;
+};
+
+// ---------- entrada validada (rechaza texto sobrante) ----------
+static bool leerEntero(const char* msg, int minimo, int maximo, int& out) {
+    cout << msg;
+    string s;
+    if (!getline(cin, s)) return false;
+    char* fin = NULL;
+    long v = strtol(s.c_str(), &fin, 10);
+    if (s.empty() || fin == s.c_str() || *fin != '\0' || v < minimo || v > maximo) {
+        cout << "  Valor invalido (rango " << minimo << ".." << maximo << ").\n";
+        return false;
+    }
+    out = (int)v;
+    return true;
+}
+static bool leerFloat(const char* msg, float& out) {
+    cout << msg;
+    string s;
+    if (!getline(cin, s)) return false;
+    char* fin = NULL;
+    double v = strtod(s.c_str(), &fin);
+    if (s.empty() || fin == s.c_str() || *fin != '\0' || v != v || v < 0 || v > 1000000) {
+        cout << "  Valor invalido (numero >= 0).\n";
+        return false;
+    }
+    out = (float)v;
+    return true;
+}
+
+// ---------- impresion ----------
+static void imprimirProc(const PCB& p, void*) {
+    cout << "  PID " << p.pid << " | " << p.nombre << " | prio " << p.prioridad
+         << " | " << p.estado << " | t=" << p.tiempoEjecucion
+         << " | mem=" << p.memoriaKB << " KB\n";
+}
+static void imprimirCola(int pid, int pr, void*) {
+    cout << "  PID " << pid << " (prio " << pr << ")\n";
+}
+static void imprimirBloque(int pid, int kb, void*) {
+    cout << "  PID " << pid << ": " << kb << " KB\n";
+}
+
+static bool pedirPid(int& pid) { return leerEntero("PID: ", 1, 2000000000, pid); }
+
+// ---------- 1. Procesos ----------
+static void registrar(Sistema& s) {
+    int pid, pr; float t;
+    if (!pedirPid(pid)) return;
+    cout << "Nombre: ";
+    string nombre;
+    if (!getline(cin, nombre) || nombre.empty()) { cout << "  Nombre vacio.\n"; return; }
+    if (!leerEntero("Prioridad (1-10, 1 = mas alta): ", 1, 10, pr)) return;
+    if (!leerFloat("Tiempo estimado de ejecucion: ", t)) return;
+    PCB p(pid, nombre, pr, t);      // estado Listo, memoria 0
+    cout << (s.lista.insertar(p) ? "  Proceso registrado.\n" : "  Error: PID repetido o datos invalidos.\n");
+}
+
+static void buscarPid(Sistema& s) {
+    int pid; if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (p) imprimirProc(*p, NULL); else cout << "  No existe.\n";
+}
+
+static void buscarNombre(Sistema& s) {
+    cout << "Nombre: ";
+    string n; getline(cin, n);
+    PCB* p = s.lista.buscarPorNombre(n);   // primera coincidencia
+    if (p) imprimirProc(*p, NULL); else cout << "  No existe.\n";
+}
+
+static void cambiarPrioridad(Sistema& s) {
+    int pid, pr;
+    if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) { cout << "  No existe.\n"; return; }
+    if (!leerEntero("Nueva prioridad (1-10): ", 1, 10, pr)) return;
+    if (pr == p->prioridad) { cout << "  Sin cambios: ya tiene esa prioridad.\n"; return; }
+    p->prioridad = pr;
+    if (s.cola.contiene(pid)) { s.cola.eliminarPid(pid); s.cola.encolar(pid, pr); } // reubicar
+    cout << "  Prioridad actualizada.\n";
+}
+
+static void cambiarEstado(Sistema& s) {
+    int pid, e;
+    if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) { cout << "  No existe.\n"; return; }
+    if (!leerEntero("Estado (1 Listo, 2 Ejecucion, 3 Bloqueado, 4 Terminado): ", 1, 4, e)) return;
+    const char* nuevo = (e == 1) ? ESTADO_LISTO : (e == 2) ? ESTADO_EJECUCION
+                      : (e == 3) ? ESTADO_BLOQUEADO : ESTADO_TERMINADO;
+    if (e != 1) s.cola.eliminarPid(pid);          // la cola solo admite Listos
+    if (e == 4) { s.pila.liberarPorPid(pid); p->memoriaKB = 0; }
+    p->estado = nuevo;
+    cout << "  Estado actualizado.\n";
+}
+
+static void eliminar(Sistema& s) {
+    int pid; if (!pedirPid(pid)) return;
+    if (!s.lista.buscarPorPid(pid)) { cout << "  No existe.\n"; return; }
+    s.cola.eliminarPid(pid);      // 1) retirar de la cola
+    s.pila.liberarPorPid(pid);    // 2) liberar sus bloques
+    s.lista.eliminar(pid);        // 3) eliminar de la lista
+    cout << "  Proceso eliminado.\n";
+}
+
+static void menuProcesos(Sistema& s) {
+    int op = -1;
+    while (op != 0) {
+        cout << "\n--- PROCESOS ---\n 1 Registrar\n 2 Listar\n 3 Buscar por PID\n"
+             << " 4 Buscar por nombre\n 5 Cambiar prioridad\n 6 Cambiar estado\n"
+             << " 7 Eliminar\n 0 Volver\n";
+        if (!leerEntero("Opcion: ", 0, 7, op)) { if (cin.eof()) return; op = -1; continue; }
+        switch (op) {
+            case 1: registrar(s); break;
+            case 2: if (s.lista.vacia()) cout << "  (sin procesos)\n"; else s.lista.recorrer(imprimirProc, NULL); break;
+            case 3: buscarPid(s); break;
+            case 4: buscarNombre(s); break;
+            case 5: cambiarPrioridad(s); break;
+            case 6: cambiarEstado(s); break;
+            case 7: eliminar(s); break;
+        }
+    }
+}
+
+// ---------- 2. Planificador ----------
+static void encolar(Sistema& s) {
+    int pid; if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) { cout << "  No existe.\n"; return; }
+    if (p->estado != ESTADO_LISTO) { cout << "  Solo se encolan procesos Listos (no Bloqueado/Terminado).\n"; return; }
+    if (s.cola.contiene(pid)) { cout << "  Ya esta en la cola.\n"; return; }
+    s.cola.encolar(pid, p->prioridad);
+    cout << "  Encolado.\n";
+}
+
+static void ejecutarSiguiente(Sistema& s) {
+    int pid, pr;
+    if (!s.cola.desencolar(pid, pr)) { cout << "  La cola esta vacia.\n"; return; }
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) return;
+    p->estado = ESTADO_EJECUCION;
+    cout << "  Ejecutando PID " << pid << " (" << p->nombre << ")...\n";
+    int kb = s.pila.liberarPorPid(pid);     // solo los bloques de ESTE PID
+    p->memoriaKB = 0;
+    p->estado = ESTADO_TERMINADO;
+    cout << "  Termino. Memoria liberada: " << kb << " KB.\n";
+}
+
+static void menuPlanificador(Sistema& s) {
+    int op = -1;
+    while (op != 0) {
+        cout << "\n--- PLANIFICADOR ---\n 1 Encolar proceso\n 2 Mostrar cola\n"
+             << " 3 Ejecutar siguiente\n 0 Volver\n";
+        if (!leerEntero("Opcion: ", 0, 3, op)) { if (cin.eof()) return; op = -1; continue; }
+        switch (op) {
+            case 1: encolar(s); break;
+            case 2: if (s.cola.vacia()) cout << "  (cola vacia)\n"; else s.cola.recorrer(imprimirCola, NULL); break;
+            case 3: ejecutarSiguiente(s); break;
+        }
+    }
+}
+
+// ---------- 3. Memoria ----------
+static void asignarMemoria(Sistema& s) {
+    int pid, kb;
+    if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) { cout << "  No existe.\n"; return; }
+    if (p->estado == ESTADO_TERMINADO) { cout << "  El proceso ya termino.\n"; return; }
+    if (!leerEntero("KB a asignar: ", 1, PilaMemoria::CAPACIDAD_KB, kb)) return;
+    if (!s.pila.push(pid, kb)) { cout << "  Memoria insuficiente (libres: " << s.pila.libresKB() << " KB).\n"; return; }
+    p->memoriaKB += kb;
+    cout << "  Bloque asignado.\n";
+}
+
+static void liberarTope(Sistema& s) {
+    int pid, kb;
+    if (!s.pila.pop(pid, kb)) { cout << "  La pila esta vacia.\n"; return; }
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (p) p->memoriaKB -= kb;
+    cout << "  Liberado bloque de PID " << pid << ": " << kb << " KB.\n";
+}
+
+static void liberarPid(Sistema& s) {
+    int pid; if (!pedirPid(pid)) return;
+    PCB* p = s.lista.buscarPorPid(pid);
+    if (!p) { cout << "  No existe.\n"; return; }
+    int kb = s.pila.liberarPorPid(pid);
+    p->memoriaKB = 0;
+    cout << "  Liberados " << kb << " KB.\n";
+}
+
+static void buscarBloques(Sistema& s) {
+    int pid; if (!pedirPid(pid)) return;
+    cout << "  PID " << pid << ": " << s.pila.bloquesDePid(pid) << " bloque(s), "
+         << s.pila.totalPorPid(pid) << " KB.\n";
+}
+
+static void menuMemoria(Sistema& s) {
+    int op = -1;
+    while (op != 0) {
+        cout << "\n--- MEMORIA ---\n 1 Asignar bloque\n 2 Liberar tope\n"
+             << " 3 Liberar todos los bloques de un PID\n 4 Buscar bloques de un PID\n"
+             << " 5 Mostrar memoria\n 0 Volver\n";
+        if (!leerEntero("Opcion: ", 0, 5, op)) { if (cin.eof()) return; op = -1; continue; }
+        switch (op) {
+            case 1: asignarMemoria(s); break;
+            case 2: liberarTope(s); break;
+            case 3: liberarPid(s); break;
+            case 4: buscarBloques(s); break;
+            case 5:
+                cout << "  Usados: " << s.pila.usadosKB() << " / " << PilaMemoria::CAPACIDAD_KB << " KB (base -> tope)\n";
+                s.pila.recorrerDesdeBase(imprimirBloque, NULL);
+                break;
+        }
+    }
+}
+
+// ---------- principal ----------
+static void guardar(Sistema& s) {
+    string err;
+    if (guardarTodo(s.lista, s.cola, s.pila, err)) cout << "  Guardado.\n";
+    else cout << "  Error al guardar: " << err << "\n";
+}
+
+int main() {
+    Sistema s;
+    string err;
+    if (!cargarTodo(s.lista, s.cola, s.pila, err)) {
+        // No se guarda nada: se preservan los archivos para corregirlos.
+        cout << "Error al cargar datos: " << err << "\nCorrija los archivos .txt y reinicie.\n";
         return 1;
     }
-#else
-    std::cout << "Avance parcial: los modulos de lista, cola y pila estan pendientes.\n";
-#endif
-    int opcion;
-    while (true) {
-        std::cout << "\n1 Procesos  2 Planificador  3 Memoria  "
-                     "4 Guardar ahora  0 Salir\n";
-        if (!leerEntero("Opcion: ", opcion)) {
-            if (std::cin.eof()) break;
-            continue;
+    int op = -1;
+    while (op != 0) {
+        cout << "\n===== GESTION DE PROCESOS =====\n 1 Procesos\n 2 Planificador\n"
+             << " 3 Memoria\n 4 Guardar ahora\n 0 Salir\n";
+        if (!leerEntero("Opcion: ", 0, 4, op)) { if (cin.eof()) break; op = -1; continue; }
+        switch (op) {
+            case 1: menuProcesos(s); break;
+            case 2: menuPlanificador(s); break;
+            case 3: menuMemoria(s); break;
+            case 4: guardar(s); break;
+            case 0: guardar(s); break;
         }
-        if (opcion == 0) break;
-#ifdef ED_MODULOS_LISTOS
-        if (opcion == 1) menuProcesos(lista, cola, pila);
-        else if (opcion == 2) menuCola(lista, cola, pila);
-        else if (opcion == 3) menuMemoria(lista, pila);
-        else if (opcion == 4)
-            std::cout << (Persistencia::guardar(lista, cola, pila) ?
-                          "Guardado.\n" : "Error al guardar.\n");
-        else std::cout << "Opcion desconocida.\n";
-#else
-        if (opcion >= 1 && opcion <= 4)
-            std::cout << "Modulo pendiente de integracion.\n";
-        else std::cout << "Opcion desconocida.\n";
-#endif
     }
-#ifdef ED_MODULOS_LISTOS
-    if (!Persistencia::guardar(lista, cola, pila))
-        std::cerr << "No se pudo guardar al salir.\n";
-#endif
     return 0;
 }

@@ -1,0 +1,9 @@
+name: Pruebas C++98
+on: [push, pull_request]
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar y ejecutar pruebas
+        run: make test
